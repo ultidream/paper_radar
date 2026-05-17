@@ -10,6 +10,14 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY || secrets.OPENAI_API_KEY }}
+      LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+      LLM_MODEL: ${{ vars.LLM_MODEL || vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
+      EMAIL_ENABLED: "true"
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      REPORT_RECIPIENTS: ${{ secrets.REPORT_RECIPIENTS }}
 
     steps:
       - name: Check out repository
@@ -25,15 +33,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Validate runtime configuration
+        shell: bash
+        run: |
+          missing=0
+          for name in LLM_API_KEY SMTP_USER SMTP_PASSWORD REPORT_RECIPIENTS; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is missing or empty"
+              missing=1
+            else
+              echo "$name is configured"
+            fi
+          done
+          echo "LLM_MODEL=${LLM_MODEL}"
+          if [ -n "$LLM_BASE_URL" ]; then
+            echo "LLM_BASE_URL is configured"
+          else
+            echo "LLM_BASE_URL is empty; this is okay for OpenAI, but required for most other providers"
+          fi
+          exit "$missing"
+
       - name: Run daily report
-        env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY || secrets.OPENAI_API_KEY }}
-          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
-          LLM_MODEL: ${{ vars.LLM_MODEL || vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
-          EMAIL_ENABLED: "true"
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          REPORT_RECIPIENTS: ${{ secrets.REPORT_RECIPIENTS }}
         run: python -m paper_radar.main
 
       - name: Upload generated report
