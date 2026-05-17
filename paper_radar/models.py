@@ -13,6 +13,10 @@ class Paper:
     url: str | None = None
     abstract: str | None = None
     authors: list[str] = field(default_factory=list)
+    affiliations: list[str] = field(default_factory=list)
+    first_author: str | None = None
+    first_author_affiliations: list[str] = field(default_factory=list)
+    corresponding_authors: list[str] = field(default_factory=list)
     source: str = ""
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -33,4 +37,3 @@ class PaperAnalysis:
     collaboration_authors: list[str]
     collaboration_ideas: list[str]
     outreach_angle: str
-

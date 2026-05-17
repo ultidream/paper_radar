@@ -42,6 +42,14 @@ def dedupe_papers(papers: list[Paper]) -> list[Paper]:
             current.abstract = paper.abstract
         if paper.authors and not current.authors:
             current.authors = paper.authors
+        if paper.affiliations and not current.affiliations:
+            current.affiliations = paper.affiliations
+        if paper.first_author and not current.first_author:
+            current.first_author = paper.first_author
+        if paper.first_author_affiliations and not current.first_author_affiliations:
+            current.first_author_affiliations = paper.first_author_affiliations
+        if paper.corresponding_authors and not current.corresponding_authors:
+            current.corresponding_authors = paper.corresponding_authors
         if paper.url and not current.url:
             current.url = paper.url
         current.source = "+".join(sorted(set(current.source.split("+") + paper.source.split("+"))))

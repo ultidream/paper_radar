@@ -8,7 +8,7 @@ from paper_radar.models import Paper, PaperAnalysis
 
 
 FALLBACK_ANALYSIS = PaperAnalysis(
-    one_sentence="未启用 AI 分析；请先配置 OPENAI_API_KEY。",
+    one_sentence="未启用 AI 分析；请先配置 LLM_API_KEY 或 OPENAI_API_KEY。",
     why_it_matters="报告已保留标题、作者、期刊、摘要和链接，可先用于每日追踪。",
     methods_data="请阅读摘要和原文判断方法、数据与模型。",
     what_to_learn=["研究问题如何表述", "摘要中的方法和数据来源", "作者团队和机构分工"],
@@ -30,27 +30,19 @@ class PaperAnalyzer:
 
     def analyze(self, paper: Paper) -> PaperAnalysis:
         if not self.enabled or not self.api_key:
-            return PaperAnalysis(
-                one_sentence="未启用 AI 分析；请先配置 LLM_API_KEY 或 OPENAI_API_KEY。",
-                why_it_matters=FALLBACK_ANALYSIS.why_it_matters,
-                methods_data=FALLBACK_ANALYSIS.methods_data,
-                what_to_learn=FALLBACK_ANALYSIS.what_to_learn,
-                relevance=FALLBACK_ANALYSIS.relevance,
-                collaboration_authors=FALLBACK_ANALYSIS.collaboration_authors,
-                collaboration_ideas=FALLBACK_ANALYSIS.collaboration_ideas,
-                outreach_angle=FALLBACK_ANALYSIS.outreach_angle,
-            )
+            return FALLBACK_ANALYSIS
 
         try:
             from openai import OpenAI
 
-            client_kwargs: dict[str, Any] = {"api_key": self.api_key}
+            client_kwargs: dict[str, Any] = {"api_key": self.api_key, "timeout": 45.0}
             if self.base_url:
                 client_kwargs["base_url"] = self.base_url
             client = OpenAI(**client_kwargs)
             response = client.chat.completions.create(
                 model=self.model,
                 temperature=0.2,
+                max_tokens=1200,
                 messages=[
                     {"role": "system", "content": self._system_prompt()},
                     {"role": "user", "content": self._paper_prompt(paper)},
@@ -58,15 +50,18 @@ class PaperAnalyzer:
             )
             content = response.choices[0].message.content or "{}"
             return self._parse_response(content)
-        except Exception as exc:  # Keep the daily report running even if one LLM call fails.
+        except Exception as exc:
             return PaperAnalysis(
                 one_sentence="AI 分析失败，已保留论文元数据。",
-                why_it_matters=f"错误：{exc}",
-                methods_data="请手动检查摘要。",
-                what_to_learn=["检查原文摘要", "确认方法与数据", "判断是否值得精读"],
+                why_it_matters=(
+                    f"调用模型失败：{type(exc).__name__}: {exc}. "
+                    f"当前模型={self.model}; base_url={self.base_url or '未设置，默认 OpenAI 官方接口'}。"
+                ),
+                methods_data="请检查 LLM_API_KEY、LLM_MODEL、LLM_BASE_URL 是否与同一个服务商匹配。",
+                what_to_learn=["先用元数据筛选是否值得精读", "检查摘要中的方法和数据", "待模型配置修复后重新运行日报"],
                 relevance="暂未判断。",
                 collaboration_authors=[],
-                collaboration_ideas=["待 AI 配置或网络恢复后重新生成。"],
+                collaboration_ideas=["模型调用恢复后重新生成合作建议。"],
                 outreach_angle="暂未生成。",
             )
 
@@ -76,15 +71,15 @@ class PaperAnalyzer:
         return (
             "你是一个严谨的科研文献助理，服务对象是一位环境、气候、大气或健康相关方向的研究者。\n"
             "请用简洁中文分析论文，不夸大，不编造摘要中没有的信息。\n"
+            "如果摘要不足，请明确说明不确定性。\n"
             "研究兴趣：\n"
             f"{interests}\n"
             "合作目标：\n"
             f"{goals}\n"
-            "必须只输出 JSON，不要 Markdown。"
+            "必须只输出 JSON，不要 Markdown，不要代码块。"
         )
 
     def _paper_prompt(self, paper: Paper) -> str:
-        authors = ", ".join(paper.authors[:12])
         abstract = (paper.abstract or "No abstract available.")[: self.max_abstract_chars]
         return json.dumps(
             {
@@ -102,8 +97,11 @@ class PaperAnalyzer:
                 "paper": {
                     "title": paper.title,
                     "journal": paper.journal,
-                    "date": paper.published_date,
-                    "authors": authors,
+                    "published_date": paper.published_date,
+                    "authors": paper.authors[:20],
+                    "first_author": paper.first_author,
+                    "first_author_affiliations": paper.first_author_affiliations[:3],
+                    "corresponding_authors": paper.corresponding_authors,
                     "doi": paper.doi,
                     "abstract": abstract,
                 },
@@ -122,9 +120,9 @@ class PaperAnalyzer:
             one_sentence=str(data.get("one_sentence", "")),
             why_it_matters=str(data.get("why_it_matters", "")),
             methods_data=str(data.get("methods_data", "")),
-            what_to_learn=list(data.get("what_to_learn") or []),
+            what_to_learn=[str(x) for x in data.get("what_to_learn") or []],
             relevance=str(data.get("relevance", "")),
-            collaboration_authors=list(data.get("collaboration_authors") or []),
-            collaboration_ideas=list(data.get("collaboration_ideas") or []),
+            collaboration_authors=[str(x) for x in data.get("collaboration_authors") or []],
+            collaboration_ideas=[str(x) for x in data.get("collaboration_ideas") or []],
             outreach_angle=str(data.get("outreach_angle", "")),
         )

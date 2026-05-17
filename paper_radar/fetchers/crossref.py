@@ -55,12 +55,34 @@ class CrossrefFetcher:
             or item.get("published", {}).get("date-parts")
         )
         authors = []
+        affiliations: list[str] = []
+        first_author = None
+        first_author_affiliations: list[str] = []
+        corresponding_authors: list[str] = []
         for author in item.get("author") or []:
             given = clean_text(author.get("given"))
             family = clean_text(author.get("family"))
             name = " ".join(part for part in [given, family] if part)
             if name:
                 authors.append(name)
+                if author.get("sequence") == "first" and first_author is None:
+                    first_author = name
+                if author.get("authenticated-orcid") or author.get("ORCID"):
+                    pass
+            author_affiliations = [
+                clean_text(aff.get("name"))
+                for aff in author.get("affiliation") or []
+                if clean_text(aff.get("name"))
+            ]
+            for aff in author_affiliations:
+                if aff not in affiliations:
+                    affiliations.append(aff)
+            if name and first_author == name:
+                first_author_affiliations = author_affiliations
+            if author.get("corresponding") and name:
+                corresponding_authors.append(name)
+        if first_author is None and authors:
+            first_author = authors[0]
         return Paper(
             title=title,
             journal=journal or canonical_journal,
@@ -69,5 +91,9 @@ class CrossrefFetcher:
             url=item.get("URL"),
             abstract=clean_text(item.get("abstract")),
             authors=authors,
+            affiliations=affiliations,
+            first_author=first_author,
+            first_author_affiliations=first_author_affiliations,
+            corresponding_authors=corresponding_authors,
             source="Crossref",
         )
