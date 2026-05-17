@@ -2,6 +2,6 @@
 .venv/
 __pycache__/
 *.pyc
-data/
-reports/
+/data/
+/reports/
 config.yaml
