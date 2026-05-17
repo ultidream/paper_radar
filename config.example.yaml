@@ -21,6 +21,8 @@ profile:
 analysis:
   enabled: true
   model: gpt-4.1-mini
+  # Optional: set this for OpenAI-compatible providers such as DeepSeek, DashScope, Moonshot, etc.
+  # base_url: https://api.openai.com/v1
   language: zh-CN
   max_abstract_chars: 2200
 
@@ -39,4 +41,3 @@ sources:
     mailto: ""
   europepmc:
     enabled: true
-

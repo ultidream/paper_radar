@@ -27,10 +27,17 @@ Copy-Item config.example.yaml config.yaml
 
 编辑 `config.yaml`，把 `profile.research_interests` 改成你的真实研究方向。
 
-设置 OpenAI key：
+设置大模型 key。OpenAI 或 OpenAI-compatible 服务都可以：
 
 ```powershell
-$env:OPENAI_API_KEY="sk-..."
+$env:LLM_API_KEY="sk-..."
+$env:LLM_MODEL="gpt-4.1-mini"
+```
+
+如果使用 DeepSeek、通义千问 DashScope 兼容模式、Moonshot/Kimi 等服务，还需要设置：
+
+```powershell
+$env:LLM_BASE_URL="https://你的服务商/v1"
 ```
 
 只生成 Word，不发邮件：
@@ -69,14 +76,24 @@ py -m paper_radar.main
 
 在 GitHub 仓库里设置这些 Secrets：
 
-- `OPENAI_API_KEY`
+- `LLM_API_KEY`
 - `SMTP_USER`
 - `SMTP_PASSWORD`
 - `REPORT_RECIPIENTS`
 
-可选设置 Repository Variable：
+可选设置 Repository Variables：
 
-- `OPENAI_MODEL`，默认 `gpt-4.1-mini`
+- `LLM_MODEL`，默认 `gpt-4.1-mini`
+- `LLM_BASE_URL`，OpenAI 官方可不填；其他兼容服务需要填写
+
+兼容服务示例：
+
+| 服务 | `LLM_BASE_URL` 示例 | `LLM_MODEL` 示例 |
+| --- | --- | --- |
+| OpenAI | 留空或 `https://api.openai.com/v1` | `gpt-4.1-mini` |
+| DeepSeek | `https://api.deepseek.com` | `deepseek-chat` |
+| 通义千问 DashScope 兼容模式 | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
+| Moonshot/Kimi | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` |
 
 然后进入 GitHub Actions 页面，可以手动点 `Run workflow` 测试一次。
 

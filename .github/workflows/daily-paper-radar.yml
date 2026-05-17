@@ -27,8 +27,9 @@ jobs:
 
       - name: Run daily report
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY || secrets.OPENAI_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
           EMAIL_ENABLED: "true"
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}

@@ -23,17 +23,31 @@ class PaperAnalyzer:
     def __init__(self, config: dict[str, Any]) -> None:
         self.config = config
         self.enabled = bool(config.get("analysis", {}).get("enabled", True))
-        self.model = os.getenv("OPENAI_MODEL") or config.get("analysis", {}).get("model", "gpt-4.1-mini")
+        self.model = os.getenv("LLM_MODEL") or os.getenv("OPENAI_MODEL") or config.get("analysis", {}).get("model", "gpt-4.1-mini")
+        self.base_url = os.getenv("LLM_BASE_URL") or os.getenv("OPENAI_BASE_URL") or config.get("analysis", {}).get("base_url")
+        self.api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
         self.max_abstract_chars = int(config.get("analysis", {}).get("max_abstract_chars", 2200))
 
     def analyze(self, paper: Paper) -> PaperAnalysis:
-        if not self.enabled or not os.getenv("OPENAI_API_KEY"):
-            return FALLBACK_ANALYSIS
+        if not self.enabled or not self.api_key:
+            return PaperAnalysis(
+                one_sentence="未启用 AI 分析；请先配置 LLM_API_KEY 或 OPENAI_API_KEY。",
+                why_it_matters=FALLBACK_ANALYSIS.why_it_matters,
+                methods_data=FALLBACK_ANALYSIS.methods_data,
+                what_to_learn=FALLBACK_ANALYSIS.what_to_learn,
+                relevance=FALLBACK_ANALYSIS.relevance,
+                collaboration_authors=FALLBACK_ANALYSIS.collaboration_authors,
+                collaboration_ideas=FALLBACK_ANALYSIS.collaboration_ideas,
+                outreach_angle=FALLBACK_ANALYSIS.outreach_angle,
+            )
 
         try:
             from openai import OpenAI
 
-            client = OpenAI()
+            client_kwargs: dict[str, Any] = {"api_key": self.api_key}
+            if self.base_url:
+                client_kwargs["base_url"] = self.base_url
+            client = OpenAI(**client_kwargs)
             response = client.chat.completions.create(
                 model=self.model,
                 temperature=0.2,
