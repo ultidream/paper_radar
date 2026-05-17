@@ -1,0 +1,33 @@
+journals:
+  - name: Nature
+    aliases: ["Nature"]
+  - name: Nature Climate Change
+    aliases: ["Nature Climate Change"]
+  - name: Nature Geoscience
+    aliases: ["Nature Geoscience"]
+  - name: Nature Communications
+    aliases: ["Nature Communications"]
+  - name: Nature Sustainability
+    aliases: ["Nature Sustainability"]
+  - name: Science
+    aliases: ["Science"]
+  - name: Science Advances
+    aliases: ["Science Advances"]
+  - name: Cell
+    aliases: ["Cell"]
+  - name: One Earth
+    aliases: ["One Earth"]
+  - name: The Lancet
+    aliases: ["The Lancet"]
+  - name: The Lancet Planetary Health
+    aliases: ["The Lancet Planetary Health"]
+  - name: The Lancet Public Health
+    aliases: ["The Lancet Public Health"]
+  - name: Environmental Science & Technology
+    aliases: ["Environmental Science & Technology", "Environmental Science and Technology"]
+  - name: Environmental Science & Technology Letters
+    aliases: ["Environmental Science & Technology Letters", "Environmental Science and Technology Letters"]
+  - name: Atmospheric Chemistry and Physics
+    aliases: ["Atmospheric Chemistry and Physics"]
+  - name: Geoscientific Model Development
+    aliases: ["Geoscientific Model Development"]

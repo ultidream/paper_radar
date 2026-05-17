@@ -1,0 +1,42 @@
+run:
+  lookback_days: 2
+  max_papers_per_run: 40
+  output_dir: reports
+  database_path: data/seen_papers.sqlite
+  timezone: Asia/Shanghai
+
+profile:
+  owner_name: "Your Name"
+  research_interests:
+    - atmospheric chemistry
+    - air quality
+    - climate modeling
+    - emissions inventories
+    - environmental health
+  collaboration_goals:
+    - find methods, datasets, and models worth learning
+    - identify authors whose work overlaps with my research
+    - suggest concrete collaboration entry points
+
+analysis:
+  enabled: true
+  model: gpt-4.1-mini
+  language: zh-CN
+  max_abstract_chars: 2200
+
+email:
+  enabled: false
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  sender: ""
+  recipients:
+    - ""
+  subject_prefix: "Daily Paper Radar"
+
+sources:
+  crossref:
+    enabled: true
+    mailto: ""
+  europepmc:
+    enabled: true
+
